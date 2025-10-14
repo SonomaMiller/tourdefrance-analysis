@@ -1,0 +1,130 @@
+---
+title: "Tour De France Historical Analysis"
+author: "Sonoma Miller"
+date: today
+format: 
+  html:
+    embed-resources: true
+    echo: false
+---
+
+# Tour De France Historical Analysis
+
+## Research Questions
+
+1.  Which rider has placed (1st, 2nd, 3rd) in the most years of the Tour De France?
+2.  What year had the longest Tour De France (# of stages and distance)?
+
+## Load and Clean Data (Data Wrangling)
+
+**About the dataset**: This data contains information about the Tour De France stages and riders from 1903 (the year it started) to 2023. It was compiled on [Kaggle](https://www.kaggle.com/datasets/sujaykapadnis/le-tour-de-france-database-1903-2023) by Sujay Kapadnis. The Tour De France is an annual bicycle race in which teams contain riders that compete in different races, or stages. Here, I have arranged stages by year ascending, and removed some rider columns we won't use. Some key columns:
+
+### Riders
+
+1.  **Rank**: The rider's placing in the race
+2.  **Rider**: The rider's name
+3.  **Year**: The year of the Tour De France
+4.  **Distance**: The total kilometers the rider rode
+5.  **TotalSeconds**: The total seconds the rider took to finish
+
+### Stages
+
+1.  **Year**: The year the stage occurred
+2.  **TotalTDFDistance**: The total kilometers of all the stages combined
+3.  **Stage**: The stage name containing the stage number and start and finish locations
+
+```{r}
+#install.packages("tidyverse")
+library(tidyverse)
+
+riders <- read.csv("tdf-rider-history.csv", header = TRUE)
+stages <- read.csv("tdf-stages-history.csv", header = TRUE)
+
+riders = riders[,!(names(riders) %in% c("X", "B", "P", "ResultType"))]
+stages <- stages |> arrange(Year)
+
+glimpse(riders)
+glimpse(stages)
+```
+
+## Visualization 1
+
+### Which rider has placed (1st, 2nd, 3rd) in the most years of the Tour De France?
+
+Here, I filter the dataset to only include riders who were in the top 3 rank, then find the riders who placed the most times. Then, I create a bar graph representing top five riders with most wins (1st, 2nd, or 3rd) in the Tour De France ever.
+
+```{r}
+#| fig.alt: Top 16 riders with most wins in the TDF ever, with Raymond Poulidor being the top rider with 20 places
+
+placed <- riders |>
+  filter(Rank <= 3)
+
+placed <- placed |>
+  add_count(Rider) %>% 
+  filter(n %in% tail(sort(unique(n)),5)) %>% 
+  arrange(Rank)
+
+ggplot(placed, aes(x = Rider, y = Rank, fill = Rank)) +
+  geom_col() +
+  labs(
+    title = "Tour De France Riders with the Most Podium Placings",
+    subtitle = "CSV Data Collected from Kaggle",
+    caption = "",
+    x = "Rider Name",
+    y = "Number of Times Placed"
+       ) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
+
+## Visualization 2
+
+### What year had the longest Tour De France (# of stages and distance)?
+
+First, we must do more data cleaning to prepare the stages dataset for visualization. I will then graph the number of stages and distance as a scatterplot, with the point labeled as the year. Then, I will be able to visually identify the longest TDF.
+
+```{r}
+stages <- stages |>
+  add_count(Year) %>% 
+  filter(n %in% tail(sort(unique(n)), 10)) %>% 
+  arrange(Year)
+
+names(stages)[names(stages) == 'n'] <- 'NumberOfStages'
+
+stages <- stages |>
+  select(Year, TotalTDFDistance, NumberOfStages)
+```
+
+However! When I plot it as a line graph, it is nearly impossible to see the difference in number of stages over the years because it's so small compared to total km distance (ex. 24 stages and 5398 km). So instead, we'll plot as a scatterplot where the two variables are on separate axes.
+
+```{r}
+#| fig.alt: Line plot where x is year, then one line is the number of stages and the other is total distance.
+
+ggplot(distinct(stages, Year, .keep_all = TRUE), aes(x = Year)) +
+  geom_line(aes(y = TotalTDFDistance, colour = "Total Distance")) + 
+  geom_line(aes(y = NumberOfStages, colour = "Number of Stages")) +
+  labs(
+    title = "Length of Tour De France by Year, # of Stages, and Total Distance",
+    subtitle = "CSV Data Collected from Kaggle",
+    caption = "",
+    x = "Number of Stages",
+    y = "Total Distance (km)"
+       )
+
+#| fig.alt: Scatterplot where x is number of stages, y is total km, and points are labeled by year
+
+ggplot(distinct(stages, Year, .keep_all = TRUE), aes(x = NumberOfStages, y = TotalTDFDistance, label = Year)) +
+  geom_point() +
+  geom_text(hjust=0, vjust=0) +
+  labs(
+  title = "Length of Tour De France by Year, # of Stages, and Total Distance",
+  subtitle = "CSV Data Collected from Kaggle",
+  caption = "",
+  x = "Number of Stages",
+  y = "Total Distance (km)"
+     )
+```
+
+## Interpretation and conclusion
+
+1.  Raymond Poulidor has placed the most times ever in the TDF, with over 20 silver and bronze medals (but no gold!).
+2.  The 1937 TDF had the most stages (31) and the 1928 TDF had the longest distance (5476 km).
