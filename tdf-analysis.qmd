@@ -2,7 +2,7 @@
 title: "Tour De France Historical Analysis"
 author: "Sonoma Miller"
 date: today
-format: 
+format:
   html:
     embed-resources: true
     echo: false
@@ -60,8 +60,8 @@ placed <- riders |>
   filter(Rank <= 3)
 
 placed <- placed |>
-  add_count(Rider) %>% 
-  filter(n %in% tail(sort(unique(n)),5)) %>% 
+  add_count(Rider) %>%
+  filter(n %in% tail(sort(unique(n)),5)) %>%
   arrange(Rank)
 
 ggplot(placed, aes(x = Rider, y = Rank, fill = Rank)) +
@@ -84,8 +84,8 @@ First, we must do more data cleaning to prepare the stages dataset for visualiza
 
 ```{r}
 stages <- stages |>
-  add_count(Year) %>% 
-  filter(n %in% tail(sort(unique(n)), 10)) %>% 
+  add_count(Year) %>%
+  filter(n %in% tail(sort(unique(n)), 10)) %>%
   arrange(Year)
 
 names(stages)[names(stages) == 'n'] <- 'NumberOfStages'
@@ -100,7 +100,7 @@ However! When I plot it as a line graph, it is nearly impossible to see the diff
 #| fig.alt: Line plot where x is year, then one line is the number of stages and the other is total distance.
 
 ggplot(distinct(stages, Year, .keep_all = TRUE), aes(x = Year)) +
-  geom_line(aes(y = TotalTDFDistance, colour = "Total Distance")) + 
+  geom_line(aes(y = TotalTDFDistance, colour = "Total Distance")) +
   geom_line(aes(y = NumberOfStages, colour = "Number of Stages")) +
   labs(
     title = "Length of Tour De France by Year, # of Stages, and Total Distance",
