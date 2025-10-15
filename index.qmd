@@ -8,8 +8,6 @@ format:
     echo: false
 ---
 
-# Tour De France Historical Analysis
-
 ## Research Questions
 
 1.  Which rider has placed (1st, 2nd, 3rd) in the most years of the Tour De France?
